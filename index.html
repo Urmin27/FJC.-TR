@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Site d'Investissement</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #balance {
+            margin: 20px;
+        }
+        #actions {
+            margin: 20px;
+        }
+        #form_depot, #form_retrait {
+            margin: 20px;
+            display: none;
+        }
+        #work_status {
+            margin: 20px;
+            display: none;
+            font-size: 18px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+        #access_code_form {
+            margin: 20px;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #007bff, #00c6ff);
+            color: white;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            animation: fadeInDown 1s ease-in-out;
+        }
+
+        /* Balance Section */
+        #balance {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            display: inline-block;
+            font-size: 20px;
+            margin-bottom: 20px;
+            animation: fadeIn 1.5s ease-in-out;
+        }
+
+        /* Buttons */
+        button {
+            background: linear-gradient(135deg, #ff8c00, #ff3d00);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin: 10px;
+            display: inline-block;
+        }
+
+        button:hover {
+            transform: scale(1.1);
+            box-shadow: 0px 5px 15px rgba(255, 61, 0, 0.5);
+        }
+
+        /* Forms */
+        .form-container {
+            display: none;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            width: 300px;
+            margin: 20px auto;
+            animation: slideIn 0.5s ease-in-out;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            transform: scale(1.05);
+            box-shadow: 0px 4px 10px rgba(255, 255, 255, 0.3);
+        }
+
+        /* Table */
+        table {
+            width: 90%;
+            margin: 20px auto;
+            border-collapse: collapse;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            animation: fadeIn 2s ease-in-out;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        th {
+            background: rgba(0, 0, 0, 0.2);
+            font-weight: bold;
+        }
+
+        /* Work Status */
+        #work_status {
+            font-size: 18px;
+            margin-top: 20px;
+            display: none;
+            animation: pulse 1s infinite;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+    </style>
+    </style>
+</head>
+<body>
+
+<h1>Site d'Investissement</h1>
+
+<!-- Section Balance -->
+<div id="balance">
+    <h3>Your Balance: <span id="balance_amount">0$</span></h3>
+</div>
+
+<!-- Actions Depot & Retrait -->
+<div id="actions">
+    <button onclick="showDepotForm()">Depot</button>
+    <button onclick="showRetraitForm()">Retrait</button>
+</div>
+
+<!-- Formulaire Depot -->
+<div id="form_depot">
+    <input type="number" id="depot_amount" placeholder="Montant à déposer">
+    <input type="text " id="email" placeholder="email ">
+    <input type="text" id="payeer_account" value="P1114188343" placeholder="compte PAYEER :P1114188343" disabled>
+    <button onclick="submitDepot()">Valider Depot</button>
+</div>
+
+<!-- Formulaire Retrait -->
+<div id="form_retrait">
+    <input type="number" id="retrait_amount" placeholder="Montant à retirer">
+    <input type="text" id="payeer_address" placeholder="Entrez votre adresse Payeer (pour le retrait)">
+    <button onclick="submitRetrait()">Valider Retrait</button>
+</div>
+
+<!-- Tableau Privee (Access Restricted) -->
+<h3>Transactions (Privée)</h3>
+<div id="access_code_form">
+    <input type="text" id="access_code" placeholder="Entrez le code d'accès">
+    <button onclick="checkAccessCode()">Accéder au Tableau</button>
+</div>
+<table id="admin_table" style="display: none;">
+    <tr>
+        <th>Code Transaction</th>
+        <th>Nom du Client</th>
+        <th>Montant</th>
+        <th>Type</th>
+        <th>Compte Payeer</th>
+        <th>Action</th>
+    </tr>
+    <!-- Transactions data will be added here dynamically -->
+</table>
+
+<button onclick="confirmTransaction()">Confirmer</button>
+
+<!-- Espace Travail -->
+<button id="demarrer_btn" onclick="startWork()">Demarrer</button>
+<div id="work_status">Travail en cours...</div>
+
+<script>
+// Load balance from localStorage if it exists
+let balance = parseFloat(localStorage.getItem('balance')) || 0;
+document.getElementById("balance_amount").innerText = balance.toFixed(2) + "$";
+
+// Load transactions from localStorage if they exist
+let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+let withdrawalCount = parseInt(localStorage.getItem('withdrawalCount')) || 0;
+
+// Gains per day - 1.5%
+function calculateDailyGains() {
+    return balance * 0.015; // 1.5% daily
+}
+
+// Function to generate a unique transaction code
+function generateTransactionCode() {
+    return '00001';  // You can replace this with a dynamic code generator if needed
+}
+
+// Show Depot Form
+function showDepotForm() {
+    document.getElementById("form_depot").style.display = "block";
+    document.getElementById("form_retrait").style.display = "none";
+}
+
+// Show Retrait Form
+function showRetraitForm() {
+    document.getElementById("form_retrait").style.display = "block";
+    document.getElementById("form_depot").style.display = "none";
+}
+
+// Handle Depot submission
+function submitDepot() {
+    let depotAmount = parseFloat(document.getElementById("depot_amount").value);
+    let payeerAccount = document.getElementById("payeer_account").value;
+    if (depotAmount < 5) {
+        alert("Le montant minimum pour un dépôt est 5$.");
+    } else {
+        let transactionCode = generateTransactionCode();
+        addTransaction(transactionCode, 'Client', depotAmount, 'Depot', payeerAccount);
+        document.getElementById("form_depot").style.display = "none";
+        alert("Depot ajouté au tableau. Veuillez confirmer.");
+    }
+}
+
+// Handle Retrait submission with daily limit
+function submitRetrait() {
+    let retraitAmount = parseFloat(document.getElementById("retrait_amount").value);
+    let payeerAddress = document.getElementById("payeer_address").value;
+
+    if (retraitAmount < 1) {
+        alert("Le montant minimum pour un retrait est 1$.");
+        return;
+    }
+
+    if (withdrawalCount === 0) {
+        if (retraitAmount > balance * 0.5) {
+            alert("Le premier retrait ne peut pas dépasser 50% des gains.");
+            return;
+        }
+    } else if (withdrawalCount === 1) {
+        if (retraitAmount > balance * 0.5) {
+            alert("Le deuxième retrait ne peut pas dépasser 50% des gains.");
+            return;
+        }
+    } else if (withdrawalCount === 2) {
+        if (retraitAmount > balance * 0.35) {
+            alert("Le troisième retrait ne peut pas dépasser 35% des gains.");
+            return;
+        }
+    } else if (withdrawalCount >= 3) {
+        let depositRequired = balance * 0.5;
+        if (retraitAmount > depositRequired) {
+            alert("Le montant du retrait est trop élevé. Vous devez d'abord faire un dépôt.");
+            return;
+        }
+    }
+
+    let transactionCode = generateTransactionCode();
+    addTransaction(transactionCode, 'Client', retraitAmount, 'Retrait', payeerAddress);
+    localStorage.setItem('withdrawalCount', withdrawalCount + 1);
+
+    document.getElementById("form_retrait").style.display = "none";
+    alert("Retrait ajouté au tableau. Veuillez confirmer.");
+}
+
+// Display Transactions in Admin Table
+function addTransaction(code, clientName, amount, type, payeerInfo) {
+    let transaction = { code, clientName, amount, type, payeerInfo };
+    transactions.push(transaction);
+    localStorage.setItem('transactions', JSON.stringify(transactions));  // Save transactions to localStorage
+    renderTransactions();  // Re-render the transactions table
+}
+
+// Render Transactions from localStorage
+function renderTransactions() {
+    let table = document.getElementById("admin_table");
+    table.innerHTML = '';  // Clear the table before re-rendering
+    let headerRow = table.insertRow();
+    headerRow.innerHTML = `
+        <th>Code Transaction</th>
+        <th>Nom du Client</th>
+        <th>Montant</th>
+        <th>Type</th>
+        <th>Compte Payeer</th>
+        <th>Action</th>
+    `;
+    
+    transactions.forEach((transaction) => {
+        let row = table.insertRow();
+        row.innerHTML = `
+            <td>${transaction.code}</td>
+            <td>${transaction.clientName}</td>
+            <td>${transaction.amount}$ (${transaction.type})</td>
+            <td>${transaction.type}</td>
+            <td>${transaction.payeerInfo}</td>
+            <td><button onclick="confirmTransaction(this)">Confirmer</button></td>
+        `;
+    });
+}
+
+// Confirm Transaction
+function confirmTransaction(button) {
+    let row = button.parentNode.parentNode;
+    let code = row.cells[0].innerText;
+    let amount = parseFloat(row.cells[2].innerText.split(' ')[0]);
+    let type = row.cells[2].innerText.split('(')[1].split(')')[0];
+
+    if (type === 'Depot') {
+        balance += amount;
+        localStorage.setItem('balance', balance);
+        document.getElementById("balance_amount").innerText = balance.toFixed(2) + "$";
+    } else if (type === 'Retrait') {
+        if (balance >= amount) {
+            let fee = amount * 0.1; // 10% frais
+            let finalAmount = amount + fee;
+            balance -= finalAmount;
+            localStorage.setItem('balance', balance);
+            document.getElementById("balance_amount").innerText = balance.toFixed(2) + "$";
+            alert("Retrait confirmé avec frais de 10%. Nouveau solde: " + balance.toFixed(2) + "$");
+        } else {
+            alert("Solde insuffisant pour ce retrait.");
+        }
+    }
+    transactions = transactions.filter(transaction => transaction.code !== code);  // Remove confirmed transaction
+    localStorage.setItem('transactions', JSON.stringify(transactions));  // Save updated transactions to localStorage
+    renderTransactions();  // Re-render the transactions table
+}
+
+// Check Access Code to Show the Tableau
+function checkAccessCode() {
+    const code = document.getElementById("access_code").value;
+    const validCode = "1234";  // Replace with your actual access code
+
+    if (code === validCode) {
+        document.getElementById("admin_table").style.display = "block"; // Show the table
+        alert("Accès autorisé au tableau des transactions.");
+    } else {
+        alert("Code d'accès incorrect. Accès refusé.");
+    }
+}
+
+// Start Work (1.5% on balance after 10 seconds) with daily limit
+function startWork() {
+    let lastWorkDate = localStorage.getItem('lastWorkDate');
+    let currentDate = new Date().toLocaleDateString(); // Format: "MM/DD/YYYY"
+
+    if (lastWorkDate === currentDate) {
+        alert("Vous avez déjà démarré le travail aujourd'hui. Veuillez réessayer demain.");
+        return;
+    }
+
+    document.getElementById("work_status").style.display = "block";
+    setTimeout(function() {
+        document.getElementById("work_status").style.display = "none";
+        addToBalance();
+        localStorage.setItem('lastWorkDate', currentDate);  // Set the last work date
+    }, 10000); // 10 seconds delay
+}
+
+// Add 1.5% to Balance after work
+function addToBalance() {
+    let amountToAdd = calculateDailyGains();
+    balance += amountToAdd;
+    localStorage.setItem('balance', balance);
+    document.getElementById("balance_amount").innerText = balance.toFixed(2) + "$";
+}
+
+// Initial render of transactions when page loads
+renderTransactions();
+</script>
+
+</body>
+</html>
