@@ -184,10 +184,51 @@
 <!-- Formulaire Depot -->
 <div id="form_depot">
     <input type="number" id="depot_amount" placeholder="Montant à déposer">
-    <input type="text " id="email" placeholder="email ">
-    <input type="text" id="payeer_account" value="P1114188343" placeholder="compte PAYEER :P1114188343" disabled>
+    <input type="text" id="email" placeholder="Email">
+    
+    <label for="depot_address">Adresse du dépôt :</label>
+    <select id="depot_address" onchange="updateCopyButton()">
+        <option value="" disabled selected>Misafidiana</option>
+        <option value="P1114188343">Payeer: P1114188343</option>
+        <option value="BTC-XYZ123456">Bitcoin: BTC-XYZ123456</option>
+    </select>
+    
+    <button onclick="copyAddress()">Copier</button>
+    
     <button onclick="submitDepot()">Valider Depot</button>
 </div>
+
+<script>
+    function copyAddress() {
+        let address = document.getElementById("depot_address").value;
+        if (address) {
+            navigator.clipboard.writeText(address).then(() => {
+                alert("Adresse copiée: " + address);
+            }).catch(err => {
+                alert("Erreur lors de la copie");
+            });
+        } else {
+            alert("Mifidiana adresse aloha");
+        }
+    }
+
+    function updateCopyButton() {
+        document.querySelector("button[onclick='copyAddress()']").disabled = false;
+    }
+
+    function submitDepot() {
+        let amount = document.getElementById("depot_amount").value;
+        let email = document.getElementById("email").value;
+        let address = document.getElementById("depot_address").value;
+
+        if (amount && email && address) {
+            alert("Depot Validé !");
+        } else {
+            alert("Fenoina daholo ny champs rehetra!");
+        }
+    }
+</script>
+
 
 <!-- Formulaire Retrait -->
 <div id="form_retrait">
@@ -265,12 +306,12 @@ function submitDepot() {
     }
 }
 
-// Handle Retrait submission with daily limit
+/// Handle Retrait submission with daily limit
 function submitRetrait() {
     let retraitAmount = parseFloat(document.getElementById("retrait_amount").value);
     let payeerAddress = document.getElementById("payeer_address").value;
 
-    // Vérifier si le montant du retrait est supérieur à 1$
+    // Vérifier si le montant du nu  est supérieur à 1$
     if (retraitAmount < 1) {
         alert("Le montant minimum pour un retrait est 1$.");
         return;
@@ -290,7 +331,7 @@ function submitRetrait() {
         return;
     }
 
-    // Conditions de retrait selon le nombre de retraits
+    // Définir la limite maximale de retrait selon les conditions
     let maxRetrait = 0;
 
     if (withdrawalCount === 0) {
@@ -316,7 +357,7 @@ function submitRetrait() {
     // Effectuer le retrait et mettre à jour les informations
     balance -= retraitAmount;
     withdrawalCount++;
-    localStorage.setItem('balance', balance);
+    localStorage.setItem('balance', balance.toFixed(2));
     localStorage.setItem('withdrawalCount', withdrawalCount);
     localStorage.setItem('lastWithdrawalDate', today); // Enregistrer la date du dernier retrait
 
@@ -328,7 +369,62 @@ function submitRetrait() {
     document.getElementById("form_retrait").style.display = "none";
     alert("Retrait ajouté au tableau. Veuillez confirmer.");
 }
- 
+
+// ✅ Rehefa manao dépôt dia afaka manao retrait indray araka ny condition
+function confirmDepot(transactionCode) {
+    let pendingDeposits = JSON.parse(localStorage.getItem('pendingDeposits')) || [];
+    let balance = parseFloat(localStorage.getItem('balance')) || 0;
+    let totalDeposit = parseFloat(localStorage.getItem('totalDeposit')) || 0;
+
+    let confirmedDepositIndex = pendingDeposits.findIndex(deposit => deposit.transactionCode === transactionCode);
+    if (confirmedDepositIndex === -1) {
+        alert("Transaction introuvable.");
+        return;
+    }
+
+    let confirmedDeposit = pendingDeposits[confirmedDepositIndex];
+
+    // ✅ Mampiakatra ny balance sy totalDeposit
+    balance += confirmedDeposit.amount;
+    totalDeposit += confirmedDeposit.amount;
+
+    // ✅ Mampiditra amin'ny localStorage
+    localStorage.setItem('balance', balance.toFixed(2));
+    localStorage.setItem('totalDeposit', totalDeposit.toFixed(2));
+    localStorage.setItem('withdrawalCount', "0"); // ✅ Manomboka indray ny cycle retrait
+
+    // ✅ Manala ilay dépôt amin'ny lisitra en attente
+    pendingDeposits.splice(confirmedDepositIndex, 1);
+    localStorage.setItem('pendingDeposits', JSON.stringify(pendingDeposits));
+
+    // ✅ Manova ny statut ho "Depot confirmé"
+    updateTransactionStatus(transactionCode, "Depot confirmé");
+
+    // ✅ Manavao ny interface hijerena raha tena miova ilay balance
+    updateBalanceUI(balance);
+
+    alert("Dépôt confirmé et ajouté au solde.");
+}
+
+// ✅ Fanavaozana ny Balance amin'ny Interface
+function updateBalanceUI(newBalance) {
+    let balanceElement = document.getElementById("balance_display"); // Ataovy azo antoka fa misy ID "balance_display" ao amin'ny HTML
+    if (balanceElement) {
+        balanceElement.innerText = newBalance.toFixed(2) + " $";
+    }
+}
+
+// ✅ Fonction pour mettre à jour le statut du dépôt
+function updateTransactionStatus(transactionCode, newStatus) {
+    let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+    let transactionIndex = transactions.findIndex(tr => tr.code === transactionCode);
+
+    if (transactionIndex !== -1) {
+        transactions[transactionIndex].status = newStatus;
+        localStorage.setItem('transactions', JSON.stringify(transactions));
+    }
+}
+
 
 // Display Transactions in Admin Table
 function addTransaction(code, clientName, amount, type, payeerInfo) {
@@ -419,22 +515,89 @@ function startWork() {
     document.getElementById("work_status").style.display = "block";
     setTimeout(function() {
         document.getElementById("work_status").style.display = "none";
-        addToBalance();
-        localStorage.setItem('lastWorkDate', currentDate);  // Set the last work date
+        let gains = addToBalance(); // ✅ Mandray ny vola azo
+        localStorage.setItem('lastWorkDate', currentDate); // ✅ Manamarika fa vita ilay tâche androany
+
+        // ✅ Notification rehefa vita ilay tâche
+        showNotification("Tâche terminée !", "Vous avez gagné " + gains.toFixed(2) + " $ aujourd'hui.");
     }, 10000); // 10 seconds delay
 }
 
-// Add 1.5% to Balance after work
+// Add 1.5% to Balance after work and return the gains
 function addToBalance() {
-    let amountToAdd = calculateDailyGains();
+    let balance = parseFloat(localStorage.getItem('balance')) || 0;
+    let amountToAdd = balance * 0.015; // 1.5% du solde
     balance += amountToAdd;
-    localStorage.setItem('balance', balance);
+    localStorage.setItem('balance', balance.toFixed(2));
+    
+    // ✅ Mise à jour de l'affichage du solde
     document.getElementById("balance_amount").innerText = balance.toFixed(2) + "$";
+    
+    return amountToAdd; // ✅ Mamerina ny vola azo
 }
 
-// Initial render of transactions when page loads
-renderTransactions();
-</script>
+// ✅ Fonction pour afficher la notification
+function showNotification(title, message) {
+    let notification = document.createElement("div");
+    notification.className = "notification";
+    notification.innerHTML = `<strong>${title}</strong><br>${message}`;
+    
+    document.body.appendChild(notification);
+    
+    // ✅ Esorina ilay notification après 5 secondes
+    setTimeout(() => {
+        notification.remove();
+    }, 5000);
+}
 
+// ✅ Ajoutez du CSS pour afficher la notification joliment
+const style = document.createElement('style');
+style.innerHTML = `
+    .notification {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: #28a745;
+        color: white;
+        padding: 15px;
+        border-radius: 5px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        z-index: 1000;
+        font-size: 16px;
+        opacity: 0.9;
+    }
+`;
+document.head.appendChild(style);
+
+
+
+
+function submitDepot() {
+    let depotAmount = parseFloat(document.getElementById("depot_amount").value);
+
+    if (depotAmount < 1) {
+        alert("Le montant minimum pour un dépôt est 1$.");
+        return;
+    }
+
+    let lastDepotDate = localStorage.getItem('lastDepotDate');
+    let today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+
+    if (lastDepotDate === today) {
+        alert("Vous avez déjà effectué un dépôt aujourd'hui. Veuillez réessayer demain.");
+        return;
+    }
+
+    let balance = parseFloat(localStorage.getItem('balance')) || 0;
+    balance += depotAmount;
+    localStorage.setItem('balance', balance.toFixed(2));
+    localStorage.setItem('lastDepotDate', today); // Enregistrer la date du dernier dépôt
+
+    document.getElementById("balance_amount").innerText = balance.toFixed(2) + "$";
+    alert("Dépôt réussi! Nouveau solde: " + balance.toFixed(2) + "$.");
+}
+
+
+</script>
 </body>
 </html>
