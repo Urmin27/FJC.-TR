@@ -270,41 +270,65 @@ function submitRetrait() {
     let retraitAmount = parseFloat(document.getElementById("retrait_amount").value);
     let payeerAddress = document.getElementById("payeer_address").value;
 
+    // Vérifier si le montant du retrait est supérieur à 1$
     if (retraitAmount < 1) {
         alert("Le montant minimum pour un retrait est 1$.");
         return;
     }
 
-    if (withdrawalCount === 0) {
-        if (retraitAmount > balance * 0.5) {
-            alert("Le premier retrait ne peut pas dépasser 50% des gains.");
-            return;
-        }
-    } else if (withdrawalCount === 1) {
-        if (retraitAmount > balance * 0.5) {
-            alert("Le deuxième retrait ne peut pas dépasser 50% des gains.");
-            return;
-        }
-    } else if (withdrawalCount === 2) {
-        if (retraitAmount > balance * 0.35) {
-            alert("Le troisième retrait ne peut pas dépasser 35% des gains.");
-            return;
-        }
-    } else if (withdrawalCount >= 3) {
-        let depositRequired = balance * 0.5;
-        if (retraitAmount > depositRequired) {
-            alert("Le montant du retrait est trop élevé. Vous devez d'abord faire un dépôt.");
-            return;
-        }
+    // Récupérer les informations du solde, des retraits et de la date du dernier retrait
+    let balance = parseFloat(localStorage.getItem('balance')) || 0;
+    let withdrawalCount = parseInt(localStorage.getItem('withdrawalCount')) || 0;
+    let lastWithdrawalDate = localStorage.getItem('lastWithdrawalDate');
+    let totalDeposit = parseFloat(localStorage.getItem('totalDeposit')) || 0;
+
+    let today = new Date().toISOString().split('T')[0]; // Date du jour
+
+    // Vérifier si un retrait a déjà été effectué aujourd'hui
+    if (lastWithdrawalDate === today) {
+        alert("Vous ne pouvez effectuer qu'un seul retrait par jour.");
+        return;
     }
 
+    // Conditions de retrait selon le nombre de retraits
+    let maxRetrait = 0;
+
+    if (withdrawalCount === 0) {
+        maxRetrait = balance * 0.5; // Premier retrait: 50% des gains
+    } else if (withdrawalCount === 1) {
+        maxRetrait = balance * 0.25; // Deuxième retrait: 25% des gains
+    } else if (withdrawalCount === 2) {
+        maxRetrait = balance * 0.1; // Troisième retrait: 10% des gains
+    } else {
+        if (totalDeposit < 10) { // Après 3 retraits, dépôt minimum de 10$ requis
+            alert("Vous devez faire un dépôt d'au moins 10$ avant de pouvoir retirer à nouveau.");
+            return;
+        }
+        maxRetrait = balance * 0.5; // Après 3 retraits et dépôt, 50% des gains
+    }
+
+    // Vérifier si le montant du retrait dépasse la limite autorisée
+    if (retraitAmount > maxRetrait) {
+        alert("Le montant du retrait dépasse la limite autorisée: " + maxRetrait.toFixed(2) + "$.");
+        return;
+    }
+
+    // Effectuer le retrait et mettre à jour les informations
+    balance -= retraitAmount;
+    withdrawalCount++;
+    localStorage.setItem('balance', balance);
+    localStorage.setItem('withdrawalCount', withdrawalCount);
+    localStorage.setItem('lastWithdrawalDate', today); // Enregistrer la date du dernier retrait
+
+    // Générer un code de transaction et ajouter au tableau des transactions
     let transactionCode = generateTransactionCode();
     addTransaction(transactionCode, 'Client', retraitAmount, 'Retrait', payeerAddress);
-    localStorage.setItem('withdrawalCount', withdrawalCount + 1);
 
+    // Masquer le formulaire de retrait et afficher un message de confirmation
     document.getElementById("form_retrait").style.display = "none";
     alert("Retrait ajouté au tableau. Veuillez confirmer.");
 }
+ 
 
 // Display Transactions in Admin Table
 function addTransaction(code, clientName, amount, type, payeerInfo) {
